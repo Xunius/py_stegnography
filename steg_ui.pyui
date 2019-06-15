@@ -1,0 +1,185 @@
+[
+  {
+    "nodes" : [
+      {
+        "nodes" : [
+          {
+            "nodes" : [
+
+            ],
+            "frame" : "{{6, 6}, {301, 330}}",
+            "class" : "TextView",
+            "attributes" : {
+              "uuid" : "250CE5D7-16A0-485C-97F6-77C71E1737CB",
+              "font_size" : 17,
+              "frame" : "{{60, 60}, {200, 200}}",
+              "editable" : true,
+              "alignment" : "left",
+              "autocorrection_type" : "default",
+              "text" : "",
+              "font_name" : "<System>",
+              "spellchecking_type" : "default",
+              "class" : "TextView",
+              "name" : "textview1",
+              "flex" : "WH"
+            },
+            "selected" : true
+          }
+        ],
+        "frame" : "{{13, 249}, {339, 202}}",
+        "class" : "ScrollView",
+        "attributes" : {
+          "uuid" : "29149985-AE51-40EA-89CD-6414C7D9CB0A",
+          "frame" : "{{11, 28}, {320, 320}}",
+          "content_height" : 320,
+          "class" : "ScrollView",
+          "name" : "scrollview1",
+          "content_width" : 320
+        },
+        "selected" : false
+      },
+      {
+        "nodes" : [
+
+        ],
+        "frame" : "{{13, 209}, {69, 32}}",
+        "class" : "Label",
+        "attributes" : {
+          "border_width" : 0,
+          "font_size" : 18,
+          "frame" : "{{96, 172}, {150, 32}}",
+          "uuid" : "A0817D04-FEDA-4AD8-A97B-752DCD9579A1",
+          "class" : "Label",
+          "alignment" : "left",
+          "text" : "Text",
+          "corner_radius" : 0,
+          "name" : "label1",
+          "font_name" : "<System>"
+        },
+        "selected" : false
+      },
+      {
+        "nodes" : [
+
+        ],
+        "frame" : "{{66, 6}, {286, 195}}",
+        "class" : "ImageView",
+        "attributes" : {
+          "frame" : "{{129, 179}, {100, 100}}",
+          "class" : "ImageView",
+          "name" : "imageview1",
+          "uuid" : "C1640B9E-BF86-42CC-99B8-EAD8E948290A"
+        },
+        "selected" : false
+      },
+      {
+        "nodes" : [
+
+        ],
+        "frame" : "{{6, 6}, {55, 43}}",
+        "class" : "Button",
+        "attributes" : {
+          "action" : "pickImage",
+          "border_width" : 1,
+          "name" : "img_pick_btn",
+          "frame" : "{{139, 213}, {80, 32}}",
+          "title" : "",
+          "uuid" : "7C37F45D-B3DC-49EE-AC47-A2100FDE5DB0",
+          "class" : "Button",
+          "corner_radius" : 1,
+          "font_size" : 15,
+          "image_name" : "iob:image_24"
+        },
+        "selected" : false
+      },
+      {
+        "nodes" : [
+
+        ],
+        "frame" : "{{275, 209}, {61, 32}}",
+        "class" : "Button",
+        "attributes" : {
+          "action" : "clearText",
+          "border_width" : 1,
+          "frame" : "{{139, 213}, {80, 32}}",
+          "title" : "Clear",
+          "uuid" : "F88992AD-4730-4C64-9094-CB5732C052D2",
+          "class" : "Button",
+          "corner_radius" : 1,
+          "name" : "clear_text_btn",
+          "font_size" : 15
+        },
+        "selected" : false
+      },
+      {
+        "nodes" : [
+
+        ],
+        "frame" : "{{203, 209}, {64, 32}}",
+        "class" : "Button",
+        "attributes" : {
+          "action" : "copyText",
+          "border_width" : 1,
+          "frame" : "{{139, 213}, {80, 32}}",
+          "title" : "Copy",
+          "uuid" : "6A2C7338-C1DF-4A80-8AAA-49505D752CAD",
+          "class" : "Button",
+          "corner_radius" : 1,
+          "name" : "copy_text_btn",
+          "font_size" : 15
+        },
+        "selected" : false
+      },
+      {
+        "nodes" : [
+
+        ],
+        "frame" : "{{129, 209}, {66, 32}}",
+        "class" : "Button",
+        "attributes" : {
+          "action" : "pasteText",
+          "border_width" : 1,
+          "frame" : "{{139, 213}, {80, 32}}",
+          "title" : "Paste",
+          "uuid" : "26A0B37A-85D3-4C65-8C1F-06CF24961268",
+          "class" : "Button",
+          "corner_radius" : 1,
+          "name" : "paste_text_btn",
+          "font_size" : 15
+        },
+        "selected" : false
+      },
+      {
+        "nodes" : [
+
+        ],
+        "frame" : "{{6, 158}, {55, 43}}",
+        "class" : "Button",
+        "attributes" : {
+          "border_width" : 1,
+          "action" : "self.run",
+          "image_name" : "iob:ios7_play_32",
+          "frame" : "{{139, 213}, {80, 32}}",
+          "title" : "",
+          "uuid" : "3BA26C38-D7C0-457F-B43C-4BD80CE8B7D5",
+          "class" : "Button",
+          "corner_radius" : 1,
+          "name" : "run_btn",
+          "font_size" : 15
+        },
+        "selected" : true
+      }
+    ],
+    "frame" : "{{0, 0}, {358, 457}}",
+    "class" : "View",
+    "attributes" : {
+      "tint_color" : "RGBA(0.000000,0.478000,1.000000,1.000000)",
+      "enabled" : true,
+      "border_color" : "RGBA(0.000000,0.000000,0.000000,1.000000)",
+      "background_color" : "RGBA(1.000000,1.000000,1.000000,1.000000)",
+      "name" : "",
+      "flex" : ""
+    },
+    "selected" : false
+  }
+]

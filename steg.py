@@ -102,7 +102,7 @@ def encrypt(message, key):
 
     key_byte=bytearray(key)
     cipher=AES.new(key_byte, AES.MODE_CFB, key_byte)
-    enc=cipher.encrypt(bytearray(message, 'utf-8'))
+    enc=cipher.encrypt(message)
     enc=base64.urlsafe_b64encode(enc)
 
     return enc
@@ -208,15 +208,13 @@ def getLastNBits(array, n):
 
 
 
+class StegCore(object):
 
-
-class Steg(object):
-
-    def __init__(self, carrier_path, output, max_num_bits=3, salt=False,
+    def __init__(self, carrier, payload_text='', max_num_bits=3, salt=False,
             encrypt_key=None):
 
-        self.carrier_path=carrier_path
-        self.output=output
+        self.carrier=carrier
+        self.payload_text=payload_text
         self.max_num_bits=max_num_bits
         self.salt=salt
         self.encrypt_key=encrypt_key
@@ -226,24 +224,15 @@ class Steg(object):
 
     def analyzeImage(self):
 
-        if not os.path.exists(self.carrier_path):
-            raise FileNotFoundError("Carrier file is not found: %s"\
-                    %self.carrier_path)
+        self.image_size=self.carrier.size[1] * self.carrier.size[0]
+        # Gets the image mode, hopefully this is L, RGB, or RGBA
+        self.image_mode=self.carrier.mode
+        print(self.image_mode)
+        if self.image_mode not in ['RGB',]:
+            raise Exception("Image mode not supported.")
 
-        filename, self.image_type=os.path.splitext(self.carrier_path)
-        try:
-            self.carrier=Image.open(self.carrier_path)
-        except:
-            raise Exception("Failed to open carrier image.")
-        else:
-            self.image_size=self.carrier.size[1] * self.carrier.size[0]
-            # Gets the image mode, hopefully this is L, RGB, or RGBA
-            self.image_mode=self.carrier.mode
-            if self.image_mode not in ['RGB',]:
-                raise Exception("Image mode not supported.")
-
-            print('# <analyzeImage>: carrier size = ', self.carrier.size)
-            print('# <analyzeImage>: carrier mode = ', self.image_mode)
+        print('# <analyzeImage>: carrier size = ', self.carrier.size)
+        print('# <analyzeImage>: carrier mode = ', self.image_mode)
 
 
     def bitsRequired(self, mode):
@@ -262,7 +251,7 @@ class Steg(object):
 
         # unit: bytes
         buffer_size=len(START_BUFFER) + len(END_BUFFER)
-        payload_size=os.path.getsize(self.payload_path) + buffer_size
+        payload_size=len(self.payload_text) + buffer_size
         slab_size=self.image_size
 
         # number of least sig bits required
@@ -279,32 +268,21 @@ class Steg(object):
         return n_bits, n_chn
 
 
-    def readPayload(self, path):
-        '''Read in payload texts
-        '''
+    def processPayload(self, text):
 
-        self.payload_path=path
+        self.payload_text=text.encode('utf-8')
 
-        if not os.path.exists(path):
-            raise FileNotFoundError('<path> not found: %s' %path)
+        # encrypt message if encrypt_key is given
+        if self.encrypt_key is not None:
+            enc_key=getEncryptKey(self.encrypt_key)
+            self.payload_text=encrypt(self.payload_text, enc_key)
 
-        try:
-            with open(path, 'r') as fin:
-                self.payload_text=fin.read()
-        except:
-            raise Exception("Failed to read payload.")
-        else:
-            # encrypt message if encrypt_key is given
-            if self.encrypt_key is not None:
-                enc_key=getEncryptKey(self.encrypt_key)
-                self.payload_text=encrypt(self.payload_text, enc_key)
-            else:
-                self.payload_text=self.payload_text.encode('utf-8')
+        # add buffers, convert to binary
+        self.payload_text=b'%s%s%s' %(START_BUFFER, self.payload_text,
+                END_BUFFER)
+        self.payload_text_bin=byte2bin(self.payload_text)
 
-            # add buffers, convert to binary
-            self.payload_text=b'%s%s%s' %(START_BUFFER, self.payload_text,
-                    END_BUFFER)
-            self.payload_text_bin=byte2bin(self.payload_text)
+        return
 
 
     def getPixel(self, n_bits, n_channels):
@@ -458,11 +436,6 @@ class Steg(object):
                             print('# <hideInfo_RGB>: current files size =', fsize)
                             break
 
-        # save output
-        output_file_type = self.image_type
-        output_file_path='%s%s' %(self.output, output_file_type)
-        new_img.save(output_file_path, output_file_type.replace('.',''))
-        print('# <hideInfo_RGB>: New image created:', output_file_path)
 
         '''
         go=True
@@ -502,7 +475,7 @@ class Steg(object):
                 # add pixel with modified values to new image
                 new_img.putpixel((col, row), (fgr, fgg, fgb))
         '''
-        return
+        return new_img
 
 
 
@@ -539,14 +512,9 @@ class Steg(object):
                 # add new bits to carrier
                 carrier_trunc[:,:,-cjj]+=(slabij*2**(bii-1)).astype('uint8')
 
-        # save image
         new_img=Image.fromarray(carrier_trunc)
-        output_file_type = self.image_type
-        output_file_path='%s%s' %(self.output, output_file_type)
-        new_img.save(output_file_path, output_file_type.replace('.',''))
-        print('# <hideInfo_RGB>: New image created:', output_file_path)
 
-        return
+        return new_img
 
 
 
@@ -613,12 +581,6 @@ class Steg(object):
         if self.encrypt_key is not None:
             enc_key=getEncryptKey(self.encrypt_key)
             hidden=decrypt(hidden, enc_key)
-
-        output_file_path='%s.txt' %self.output
-        with open(output_file_path, 'w') as fout:
-            fout.write(hidden)
-
-        print('# <readInfo_RGB>: Message wrote to:', output_file_path)
 
         return hidden
 
@@ -694,6 +656,109 @@ class Steg(object):
             hidden=decrypt(hidden, enc_key)
             hidden=hidden.decode('utf-8')
 
+        return hidden
+
+
+class StegCLI(StegCore):
+
+    def __init__(self, carrier_path, output, max_num_bits=3, salt=False,
+            encrypt_key=None):
+
+        self.carrier_path=carrier_path
+        self.output=output
+
+        # read in things
+        if not os.path.exists(self.carrier_path):
+            raise FileNotFoundError("Carrier file is not found: %s"\
+                    %self.carrier_path)
+
+        filename, self.image_type=os.path.splitext(self.carrier_path)
+        try:
+            self.carrier=Image.open(self.carrier_path)
+        except:
+            raise Exception("Failed to open carrier image.")
+
+        super().__init__(self.carrier, '', max_num_bits, salt, encrypt_key)
+
+
+
+    def readPayload(self, path):
+        '''Read in payload texts
+        '''
+
+        self.payload_path=path
+
+        if not os.path.exists(path):
+            raise FileNotFoundError('<path> not found: %s' %path)
+
+        try:
+            with open(path, 'r') as fin:
+                payload_text=fin.read()
+        except:
+            raise Exception("Failed to read payload.")
+
+        return payload_text
+
+
+    def hideInfo_RGB(self, salt=None):
+        '''Hide information into RGB carrier image
+
+        Args:
+            salt (bool): whether to add random salt or not. If None, will use
+                         the attribute of the Steg obj.
+        '''
+
+        new_img=super().hideInfo_RGB(salt)
+
+        # save output
+        output_file_type = self.image_type
+        output_file_path='%s%s' %(self.output, output_file_type)
+        new_img.save(output_file_path, output_file_type.replace('.',''))
+        print('# <hideInfo_RGB>: New image created:', output_file_path)
+
+        return
+
+
+
+    def hideInfo_RGB_numpy(self):
+        '''Hide information into RGB carrier image, numpy version
+
+        '''
+
+        new_img=super().hideInfo_RGB_numpy()
+
+        # save output
+        output_file_type = self.image_type
+        output_file_path='%s%s' %(self.output, output_file_type)
+        new_img.save(output_file_path, output_file_type.replace('.',''))
+        print('# <hideInfo_RGB>: New image created:', output_file_path)
+
+        return
+
+
+
+    def readInfo_RGB(self):
+        '''Read message from carrier, for RGB image
+        '''
+
+        hidden=super().readInfo_RGB()
+
+        output_file_path='%s.txt' %self.output
+        with open(output_file_path, 'w') as fout:
+            fout.write(hidden)
+
+        print('# <readInfo_RGB>: Message wrote to:', output_file_path)
+
+        return hidden
+
+
+
+    def readInfo_RGB_numpy(self):
+        '''Read message from carrier, for RGB image, numpy version
+        '''
+
+        hidden=super().readInfo_RGB_numpy()
+
         output_file_path='%s.txt' %self.output
         with open(output_file_path, 'w') as fout:
             fout.write(hidden)
@@ -701,7 +766,6 @@ class Steg(object):
         print('# <readInfo_RGB_numpy>: Message wrote to:', output_file_path)
 
         return hidden
-
 
 
 
@@ -724,16 +788,16 @@ def main(args):
     print('# <main>: salt = ', salt)
     print('# <main>: output = ', output)
 
-    stg=Steg(carrier, salt=salt, encrypt_key=password, output=output)
+    stg=StegCLI(carrier, salt=salt, encrypt_key=password, output=output)
 
     if payload is not None:
-        stg.readPayload(payload)
+        payload_text=stg.readPayload(payload)
+        stg.processPayload(payload_text)
         if salt:
             stg.hideInfo_RGB(salt=True)
         else:
             if HAS_NUMPY:
-                #stg.hideInfo_RGB_numpy()
-                stg.hideInfo_RGB(salt=False)
+                stg.hideInfo_RGB_numpy()
             else:
                 stg.hideInfo_RGB(salt=False)
 
