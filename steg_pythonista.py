@@ -13,7 +13,7 @@ from console import hud_alert
 import dialogs
 import photos
 import io
-from steg import StegCore
+from steg import StegCore, StartNotFoundError
 
 
 
@@ -112,8 +112,12 @@ class StegView(object):
                 salt=False, encrypt_key=pwd)
 
         if len(self.tv.text)==0:
-            hidden=stegcore.readInfo_RGB_numpy()
-            self.tv.text=hidden
+            try:
+                hidden=stegcore.readInfo_RGB_numpy()
+            except StartNotFoundError:
+                hud_alert('No message found.')
+            else:
+                self.tv.text=hidden
         else:
             stegcore.processPayload(self.tv.text)
             new_img=stegcore.hideInfo_RGB_numpy()
