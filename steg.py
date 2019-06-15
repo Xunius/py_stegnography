@@ -22,6 +22,8 @@ Update time: 2019-06-08 16:28:16.
 #--------Import modules-------------------------
 import os
 import sys
+if sys.version_info.major==2:
+    raise Exception("Use python3.")
 import argparse
 from random import choice
 from io import BytesIO
@@ -37,8 +39,8 @@ except:
 
 
 
-START_BUFFER = b'EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE'
-END_BUFFER   = b'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+START_BUFFER = 'EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE'
+END_BUFFER   = 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'
 
 
 
@@ -160,7 +162,7 @@ def getSalt(n):
                           with length <n>.
     '''
 
-    salt=(choice('01') for i in xrange(n))
+    salt=(choice('01') for i in range(n))
     return salt
 
 
@@ -302,7 +304,7 @@ class Steg(object):
             # add buffers, convert to binary
             self.payload_text='%s%s%s' %(START_BUFFER, self.payload_text,
                     END_BUFFER)
-            self.payload_text_bytes=bytearray(self.payload_text)
+            self.payload_text_bytes=bytearray(self.payload_text, 'utf-8')
             self.payload_text_bin=byte2bin(self.payload_text_bytes)
 
 
@@ -334,8 +336,8 @@ class Steg(object):
 
         for bii in range(1, n_bits+1):
             for cjj in range(1, n_channels+1):
-                for row in xrange(nrow):
-                    for col in xrange(ncol):
+                for row in range(nrow):
+                    for col in range(ncol):
                         if (row, col) in cache:
                             yield cache[(row, col)], row, col, -cjj, -bii
                         else:
@@ -367,8 +369,8 @@ class Steg(object):
 
         for bii in range(1, n_bits+1):
             for cjj in range(1, n_channels+1):
-                for row in xrange(nrow):
-                    for col in xrange(ncol):
+                for row in range(nrow):
+                    for col in range(ncol):
                         if (row, col) in cache:
                             yield cache[(row, col)][-cjj][-bii]
                         else:
@@ -413,7 +415,7 @@ class Steg(object):
             except StopIteration:
                 break
             else:
-                pii, row, col, channel, bit=pixel_gen.next()
+                pii, row, col, channel, bit=next(pixel_gen)
                 if (row, col) in cache:
                     # pii is [r, g, b] bytes at (row, col)
                     pii=cache[(row, col)]
@@ -441,7 +443,7 @@ class Steg(object):
                 except StopIteration:
                     break
                 else:
-                    pii, row, col, channel, bit=pixel_gen.next()
+                    pii, row, col, channel, bit=next(pixel_gen)
                     if (row, col) in cache:
                         pii=cache[(row, col)]
                     pii[channel]=changeLSB(pii[channel], bii, bit)
@@ -483,8 +485,8 @@ class Steg(object):
         '''
 
         '''
-        for row in xrange(self.carrier.size[0]):
-            for col in xrange(self.carrier.size[1]):
+        for row in range(self.carrier.size[0]):
+            for col in range(self.carrier.size[1]):
                 # get the value for each byte of each pixel in the original image
                 fgr,fgg,fgb = self.carrier.getpixel((col,row))
 
@@ -559,8 +561,8 @@ class Steg(object):
         # check buffer every number of bits
         buffer_check=max(s_buffer_size, e_buffer_size)
         # convert buffers to binary
-        s_buffer_bin=byte2bin(bytearray(START_BUFFER))
-        e_buffer_bin=byte2bin(bytearray(END_BUFFER))
+        s_buffer_bin=byte2bin(bytearray(START_BUFFER, 'utf-8'))
+        e_buffer_bin=byte2bin(bytearray(END_BUFFER, 'utf-8'))
 
         n=0
         n_channels=3
@@ -603,14 +605,18 @@ class Steg(object):
 
         # binary to str
         hidden=''
-        for ii in xrange(len(str_bytes)):
+        for ii in range(len(str_bytes)):
             cii=chr(int(str_bytes[ii],2))
             hidden+=cii
+
+        hidden=eval(hidden)
+        hidden=str(hidden,'utf-8')
 
         # decrypt
         if self.encrypt_key is not None:
             enc_key=getEncryptKey(self.encrypt_key)
             hidden=decrypt(hidden, enc_key)
+            hidden=str(hidden,'utf-8')
 
         output_file_path='%s.txt' %self.output
         with open(output_file_path, 'w') as fout:
@@ -655,7 +661,7 @@ class Steg(object):
         start_idx=-1   # index of START_BUFFER
         end_idx=-1     # index of END_BUFFER
 
-        for ii in xrange(len(int_stream)):
+        for ii in range(len(int_stream)):
             cii=int_stream[ii]
             cii=chr(cii)
             hidden+=cii
@@ -688,10 +694,14 @@ class Steg(object):
 
         hidden=hidden[start_idx+s_buffer_size : end_idx]
 
+        hidden=eval(hidden)
+        hidden=str(hidden,'utf-8')
+
         # decrypt
         if self.encrypt_key is not None:
             enc_key=getEncryptKey(self.encrypt_key)
             hidden=decrypt(hidden, enc_key)
+            hidden=str(hidden,'utf-8')
 
         output_file_path='%s.txt' %self.output
         with open(output_file_path, 'w') as fout:
