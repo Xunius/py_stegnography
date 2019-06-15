@@ -52,6 +52,7 @@ class StegView(object):
         self.paste_text_tn=self.findChild('paste_text_btn')
         self.copy_text_tn=self.findChild('copy_text_btn')
         self.clear_text_tn=self.findChild('clear_text_btn')
+        self.password_tf=self.findChild('password_tf')
 
         self.carrier=None
 
@@ -101,9 +102,14 @@ class StegView(object):
         if self.carrier is None:
             hud_alert('Select a carrier image first.')
             return
+        #pwd=self.password_tf.text
+        #pwd=pwd.encode('ascii')
+        #if len(pwd)==0:
+        	#pwd=None
+        pwd=None
 
         stegcore=StegCore(self.carrier, self.tv.text,
-                salt=False, encrypt_key=None)
+                salt=False, encrypt_key=pwd)
 
         if len(self.tv.text)==0:
             hidden=stegcore.readInfo_RGB_numpy()
