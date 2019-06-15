@@ -575,12 +575,12 @@ class StegCore(object):
         for ii in range(len(str_bytes)):
             hidden.append(int(str_bytes[ii],2))
 
-        hidden=hidden.decode('utf-8')
-
         # decrypt
         if self.encrypt_key is not None:
             enc_key=getEncryptKey(self.encrypt_key)
             hidden=decrypt(hidden, enc_key)
+
+        hidden=hidden.decode('utf-8')
 
         return hidden
 
@@ -648,13 +648,14 @@ class StegCore(object):
             if e_idx==-1:
                 raise EndNotFoundError()
 
-        hidden=hidden[start_idx+s_buffer_size : end_idx].decode('utf-8')
+        hidden=hidden[start_idx+s_buffer_size : end_idx]
 
         # decrypt
         if self.encrypt_key is not None:
             enc_key=getEncryptKey(self.encrypt_key)
             hidden=decrypt(hidden, enc_key)
-            hidden=hidden.decode('utf-8')
+
+        hidden=hidden.decode('utf-8')
 
         return hidden
 
@@ -741,6 +742,7 @@ class StegCLI(StegCore):
         '''Read message from carrier, for RGB image
         '''
 
+        __import__('pdb').set_trace()
         hidden=super().readInfo_RGB()
 
         output_file_path='%s.txt' %self.output
