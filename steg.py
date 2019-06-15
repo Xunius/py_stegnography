@@ -296,6 +296,7 @@ class Steg(object):
         except:
             raise Exception("Failed to read payload.")
         else:
+            #self.payload_text=self.payload_text.encode('utf-8')
             # encrypt message if encrypt_key is given
             if self.encrypt_key is not None:
                 enc_key=getEncryptKey(self.encrypt_key)
@@ -609,14 +610,14 @@ class Steg(object):
             cii=chr(int(str_bytes[ii],2))
             hidden+=cii
 
-        hidden=eval(hidden)
-        hidden=str(hidden,'utf-8')
+        #hidden=eval(hidden)
+        #hidden=str(hidden,'utf-8')
 
         # decrypt
         if self.encrypt_key is not None:
             enc_key=getEncryptKey(self.encrypt_key)
             hidden=decrypt(hidden, enc_key)
-            hidden=str(hidden,'utf-8')
+            #hidden=str(hidden,'utf-8')
 
         output_file_path='%s.txt' %self.output
         with open(output_file_path, 'w') as fout:
@@ -694,14 +695,14 @@ class Steg(object):
 
         hidden=hidden[start_idx+s_buffer_size : end_idx]
 
-        hidden=eval(hidden)
-        hidden=str(hidden,'utf-8')
+        #hidden=eval(hidden)
+        #hidden=str(hidden,'utf-8')
 
         # decrypt
         if self.encrypt_key is not None:
             enc_key=getEncryptKey(self.encrypt_key)
             hidden=decrypt(hidden, enc_key)
-            hidden=str(hidden,'utf-8')
+            #hidden=str(hidden,'utf-8')
 
         output_file_path='%s.txt' %self.output
         with open(output_file_path, 'w') as fout:
