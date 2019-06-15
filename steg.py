@@ -39,8 +39,8 @@ except:
 
 
 
-START_BUFFER = 'EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE'
-END_BUFFER   = 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'
+START_BUFFER = b'EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE'
+END_BUFFER   = b'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF'
 
 
 
@@ -102,7 +102,7 @@ def encrypt(message, key):
 
     key_byte=bytearray(key)
     cipher=AES.new(key_byte, AES.MODE_CFB, key_byte)
-    enc=cipher.encrypt(bytearray(message))
+    enc=cipher.encrypt(bytearray(message, 'utf-8'))
     enc=base64.urlsafe_b64encode(enc)
 
     return enc
@@ -141,7 +141,6 @@ def getImageFileSize(img, img_format='png'):
     return fsize
 
 
-
 def changeLSB(old_byte, new_bit, bit=-1):
     '''Change the least significant bit of a byte
     '''
@@ -164,7 +163,6 @@ def getSalt(n):
 
     salt=(choice('01') for i in range(n))
     return salt
-
 
 
 def clearLastNBits(array, n):
@@ -291,22 +289,22 @@ class Steg(object):
             raise FileNotFoundError('<path> not found: %s' %path)
 
         try:
-            with open(path, 'rb') as fin:
+            with open(path, 'r') as fin:
                 self.payload_text=fin.read()
         except:
             raise Exception("Failed to read payload.")
         else:
-            #self.payload_text=self.payload_text.encode('utf-8')
             # encrypt message if encrypt_key is given
             if self.encrypt_key is not None:
                 enc_key=getEncryptKey(self.encrypt_key)
                 self.payload_text=encrypt(self.payload_text, enc_key)
+            else:
+                self.payload_text=self.payload_text.encode('utf-8')
 
             # add buffers, convert to binary
-            self.payload_text='%s%s%s' %(START_BUFFER, self.payload_text,
+            self.payload_text=b'%s%s%s' %(START_BUFFER, self.payload_text,
                     END_BUFFER)
-            self.payload_text_bytes=bytearray(self.payload_text, 'utf-8')
-            self.payload_text_bin=byte2bin(self.payload_text_bytes)
+            self.payload_text_bin=byte2bin(self.payload_text)
 
 
     def getPixel(self, n_bits, n_channels):
@@ -562,8 +560,8 @@ class Steg(object):
         # check buffer every number of bits
         buffer_check=max(s_buffer_size, e_buffer_size)
         # convert buffers to binary
-        s_buffer_bin=byte2bin(bytearray(START_BUFFER, 'utf-8'))
-        e_buffer_bin=byte2bin(bytearray(END_BUFFER, 'utf-8'))
+        s_buffer_bin=byte2bin(START_BUFFER)
+        e_buffer_bin=byte2bin(END_BUFFER)
 
         n=0
         n_channels=3
@@ -605,19 +603,16 @@ class Steg(object):
         str_bytes=[bins[i:i+8] for i in range(0, len(bins), 8)]
 
         # binary to str
-        hidden=''
+        hidden=bytearray()
         for ii in range(len(str_bytes)):
-            cii=chr(int(str_bytes[ii],2))
-            hidden+=cii
+            hidden.append(int(str_bytes[ii],2))
 
-        #hidden=eval(hidden)
-        #hidden=str(hidden,'utf-8')
+        hidden=hidden.decode('utf-8')
 
         # decrypt
         if self.encrypt_key is not None:
             enc_key=getEncryptKey(self.encrypt_key)
             hidden=decrypt(hidden, enc_key)
-            #hidden=str(hidden,'utf-8')
 
         output_file_path='%s.txt' %self.output
         with open(output_file_path, 'w') as fout:
@@ -653,7 +648,7 @@ class Steg(object):
         # binary to int
         int_stream=np.packbits(lastbits, axis=-1).squeeze()
 
-        hidden=''
+        hidden=bytearray()
         s_buffer_size=len(START_BUFFER)
         e_buffer_size=len(END_BUFFER)
         buffer_check=max(s_buffer_size, e_buffer_size)
@@ -663,9 +658,7 @@ class Steg(object):
         end_idx=-1     # index of END_BUFFER
 
         for ii in range(len(int_stream)):
-            cii=int_stream[ii]
-            cii=chr(cii)
-            hidden+=cii
+            hidden.append(int_stream[ii])
 
             n+=1
             if n%buffer_check==0:
@@ -693,16 +686,13 @@ class Steg(object):
             if e_idx==-1:
                 raise EndNotFoundError()
 
-        hidden=hidden[start_idx+s_buffer_size : end_idx]
-
-        #hidden=eval(hidden)
-        #hidden=str(hidden,'utf-8')
+        hidden=hidden[start_idx+s_buffer_size : end_idx].decode('utf-8')
 
         # decrypt
         if self.encrypt_key is not None:
             enc_key=getEncryptKey(self.encrypt_key)
             hidden=decrypt(hidden, enc_key)
-            #hidden=str(hidden,'utf-8')
+            hidden=hidden.decode('utf-8')
 
         output_file_path='%s.txt' %self.output
         with open(output_file_path, 'w') as fout:
@@ -742,7 +732,8 @@ def main(args):
             stg.hideInfo_RGB(salt=True)
         else:
             if HAS_NUMPY:
-                stg.hideInfo_RGB_numpy()
+                #stg.hideInfo_RGB_numpy()
+                stg.hideInfo_RGB(salt=False)
             else:
                 stg.hideInfo_RGB(salt=False)
 
