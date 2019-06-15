@@ -29,6 +29,7 @@ def pasteText(sender):
 def clearText(sender):
     stegobj.clearText(sender)
 
+@ui.in_background
 def pickImage(sender):
     stegobj.pickImage(sender)
 
